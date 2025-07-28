@@ -1,6 +1,6 @@
-# feedfilter
+![feedfilter](feedfilter.png)
 
-A versatile RSS feed filtering and manipulation tool.
+**feedfilter* is a versatile RSS feed filtering and manipulation tool.
 
 ## Features
 
