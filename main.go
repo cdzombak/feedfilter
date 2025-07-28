@@ -209,22 +209,23 @@ func main() {
 			os.Exit(ec.IOErr)
 		}
 	}(outFile)
-	if cfg.ToFmt == FmtJson {
+	switch cfg.ToFmt {
+	case FmtJson:
 		if err := outFeed.WriteJSON(outFile); err != nil {
 			log.Printf("Error writing JSON feed '%s': %s", cfg.To, err)
 			os.Exit(ec.Failure)
 		}
-	} else if cfg.ToFmt == FmtRss {
+	case FmtRss:
 		if err := outFeed.WriteRss(outFile); err != nil {
 			log.Printf("Error writing RSS feed '%s': %s", cfg.To, err)
 			os.Exit(ec.Failure)
 		}
-	} else if cfg.ToFmt == FmtAtom {
+	case FmtAtom:
 		if err := outFeed.WriteAtom(outFile); err != nil {
 			log.Printf("Error writing Atom feed '%s': %s", cfg.To, err)
 			os.Exit(ec.Failure)
 		}
-	} else {
+	default:
 		log.Printf("Internal error: unknown output format '%s'", cfg.ToFmt)
 		os.Exit(ec.Failure)
 	}
