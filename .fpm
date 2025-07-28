@@ -1,0 +1,6 @@
+-s dir
+--name feedfilter
+--description "A versatile RSS feed filtering and manipulation tool."
+--url "https://github.com/cdzombak/feedfilter"
+--maintainer "Chris Dzombak <chris@dzombak.com>"
+--license GPL-3.0

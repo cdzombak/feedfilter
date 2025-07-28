@@ -1,0 +1,4 @@
+feedfilter  # output binary from `go build .`
+
+out/
+tmp/
