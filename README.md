@@ -1,26 +1,55 @@
 ![feedfilter](feedfilter.png)
 
-**feedfilter* is a versatile RSS feed filtering and manipulation tool.
-
-## Features
-
-- **Filter by keyword**: Include or exclude feed items based on keywords in the title or description.
-- **Filter by author**: Include or exclude feed items based on author.
-- **And more!**: More features to come.
+**feedfilter** allows filtering an RSS feed based on a CEL expression that decides which items to include.
 
 ## Usage
 
 ```bash
-feedfilter [options] <feed-url>
+feedfilter [options]
 ```
 
 ### Options
 
-- `-i, --include-keyword <keyword>`: Include items with this keyword.
-- `-e, --exclude-keyword <keyword>`: Exclude items with this keyword.
-- `-a, --include-author <author>`: Include items from this author.
-- `-x, --exclude-author <author>`: Exclude items from this author.
-- `-o, --output <file>`: Output to file instead of stdout.
+- `-config <path>`: Path to config file (default: `./config.json`)
+- `-version`: Print version and exit
+
+### Configuration
+
+feedfilter uses a JSON configuration file to specify the feed source, output destination, filtering rules, and output format. The configuration file should contain:
+
+```json
+{
+  "from": "https://example.com/feed.xml",
+  "to": "/path/to/output.xml",
+  "to_fmt": "rss",
+  "include_if": "title.contains('keyword') || categories.exists(c, c == 'tech')",
+  "meta": {
+    "title": "Filtered Feed",
+    "description": "A filtered version of the original feed",
+    "link": "https://example.com"
+  }
+}
+```
+
+#### Configuration Fields
+
+- `from` (required): URL of the RSS/Atom feed to filter
+- `to` (required): File path where the filtered feed will be written
+- `to_fmt` (required): Output format - `"rss"`, `"atom"`, or `"json"`
+- `include_if` (optional): CEL expression to determine which items to include. If empty, all items are included.
+- `meta` (optional): Metadata for the output feed
+  - `title`: Feed title (use `"$$ORIG$$"` to use original feed's title)
+  - `description`: Feed description (use `"$$ORIG$$"` to use original feed's description)
+  - `link`: Feed link URL
+
+#### CEL Expression Variables
+
+The `include_if` CEL expression has access to these variables for each feed item:
+
+- `title` (string): Item title
+- `description` (string): Item description
+- `link` (string): Item link
+- `categories` (list of strings): Item categories
 
 ## Installation
 
@@ -70,8 +99,8 @@ Docker images are available for a variety of Linux architectures from [Docker Hu
 Run them via, for example:
 
 ```shell
-docker run --rm cdzombak/feedfilter:1 [OPTIONS]
-docker run --rm ghcr.io/cdzombak/feedfilter:1 [OPTIONS]
+docker run -v ./config.json:/config.json --rm cdzombak/feedfilter:1 -config /config.json
+docker run -v ./config.json:/config.json --rm ghcr.io/cdzombak/feedfilter:1 -config /config.json
 ```
 
 ## License
