@@ -1,6 +1,6 @@
 ![feedfilter](feedfilter.png)
 
-**feedfilter** allows filtering an RSS feed based on a CEL expression that decides which items to include.
+**feedfilter** allows filtering an RSS feed based on a [CEL](https://cel.dev) expression that decides which items to include.
 
 ## Usage
 
