@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"reflect"
@@ -28,6 +29,36 @@ const (
 
 var version = "dev"
 
+func parseFeed(from string, parser *gofeed.Parser, ctx context.Context) (*gofeed.Feed, error) {
+	if from == "-" {
+		return parser.Parse(os.Stdin)
+	}
+	fromLower := strings.ToLower(from)
+	if strings.HasPrefix(fromLower, "http://") || strings.HasPrefix(fromLower, "https://") {
+		return parser.ParseURLWithContext(from, ctx)
+	} else {
+		file, err := os.Open(from)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+		return parser.Parse(file)
+	}
+}
+
+func getOutputWriter(to string) (io.WriteCloser, error) {
+	if to == "-" {
+		return nopWriteCloser{os.Stdout}, nil
+	}
+	return os.OpenFile(to, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, OutMode)
+}
+
+type nopWriteCloser struct {
+	io.Writer
+}
+
+func (nopWriteCloser) Close() error { return nil }
+
 type Config struct {
 	From      string `json:"from"`       // URL to read from
 	To        string `json:"to"`         // File to write to
@@ -42,6 +73,8 @@ type Config struct {
 
 func main() {
 	configPath := flag.String("config", "./config.json", "Path to config file")
+	fromFlag := flag.String("from", "", "Feed source (URL, file path, or '-' for stdin)")
+	toFlag := flag.String("to", "", "Output destination (file path or '-' for stdout)")
 	printVersion := flag.Bool("version", false, "Print version and exit")
 	flag.Parse()
 
@@ -61,13 +94,23 @@ func main() {
 		os.Exit(ec.NotConfigured)
 	}
 
-	if //goland:noinspection HttpUrlsUsage
-	cfg.From == "" || (!strings.HasPrefix(cfg.From, "http://") && !strings.HasPrefix(cfg.From, "https://")) {
-		log.Println("Config error: 'from' must be a valid URL")
+	// CLI flags override config file values
+	finalFrom := *fromFlag
+	if finalFrom == "" {
+		finalFrom = cfg.From
+	}
+	finalTo := *toFlag
+	if finalTo == "" {
+		finalTo = cfg.To
+	}
+
+	// Validate that from and to are provided
+	if finalFrom == "" {
+		log.Println("Error: 'from' must be specified via config file or -from flag")
 		os.Exit(ec.NotConfigured)
 	}
-	if cfg.To == "" {
-		log.Println("Config error: 'to' must be a valid file path")
+	if finalTo == "" {
+		log.Println("Error: 'to' must be specified via config file or -to flag")
 		os.Exit(ec.NotConfigured)
 	}
 	if cfg.ToFmt != FmtJson && cfg.ToFmt != FmtRss && cfg.ToFmt != FmtAtom {
@@ -106,7 +149,7 @@ func main() {
 	defer parseCtxCancel()
 	parser := gofeed.NewParser()
 	parser.UserAgent = "github.com/cdzombak/feedfilter|" + version
-	inFeed, err := parser.ParseURLWithContext(cfg.From, parseCtx)
+	inFeed, err := parseFeed(finalFrom, parser, parseCtx)
 	if err != nil {
 		log.Printf("Error parsing feed: %s", err)
 		os.Exit(ec.Failure)
@@ -198,31 +241,31 @@ func main() {
 		outFeed.Add(outItem)
 	}
 
-	outFile, err := os.OpenFile(cfg.To, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, OutMode)
+	outWriter, err := getOutputWriter(finalTo)
 	if err != nil {
-		log.Printf("Error opening output file '%s': %s", cfg.To, err)
+		log.Printf("Error opening output destination '%s': %s", finalTo, err)
 		os.Exit(ec.IOErr)
 	}
-	defer func(outFile *os.File) {
-		if err := outFile.Close(); err != nil {
-			log.Printf("Error closing output file: %s", err)
+	defer func() {
+		if err := outWriter.Close(); err != nil {
+			log.Printf("Error closing output: %s", err)
 			os.Exit(ec.IOErr)
 		}
-	}(outFile)
+	}()
 	switch cfg.ToFmt {
 	case FmtJson:
-		if err := outFeed.WriteJSON(outFile); err != nil {
-			log.Printf("Error writing JSON feed '%s': %s", cfg.To, err)
+		if err := outFeed.WriteJSON(outWriter); err != nil {
+			log.Printf("Error writing JSON feed '%s': %s", finalTo, err)
 			os.Exit(ec.Failure)
 		}
 	case FmtRss:
-		if err := outFeed.WriteRss(outFile); err != nil {
-			log.Printf("Error writing RSS feed '%s': %s", cfg.To, err)
+		if err := outFeed.WriteRss(outWriter); err != nil {
+			log.Printf("Error writing RSS feed '%s': %s", finalTo, err)
 			os.Exit(ec.Failure)
 		}
 	case FmtAtom:
-		if err := outFeed.WriteAtom(outFile); err != nil {
-			log.Printf("Error writing Atom feed '%s': %s", cfg.To, err)
+		if err := outFeed.WriteAtom(outWriter); err != nil {
+			log.Printf("Error writing Atom feed '%s': %s", finalTo, err)
 			os.Exit(ec.Failure)
 		}
 	default:
