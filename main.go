@@ -32,7 +32,9 @@ var version = "dev"
 func parseFeed(from string, parser *gofeed.Parser, ctx context.Context) (*gofeed.Feed, error) {
 	if from == "-" {
 		return parser.Parse(os.Stdin)
-	} else if strings.HasPrefix(strings.ToLower(from), "http://") || strings.HasPrefix(strings.ToLower(from), "https://") {
+	}
+	fromLower := strings.ToLower(from)
+	if strings.HasPrefix(fromLower, "http://") || strings.HasPrefix(fromLower, "https://") {
 		return parser.ParseURLWithContext(from, ctx)
 	} else {
 		file, err := os.Open(from)
