@@ -11,6 +11,8 @@ feedfilter [options]
 ### Options
 
 - `-config <path>`: Path to config file (default: `./config.json`)
+- `-from <source>`: Feed source (URL, file path, or '-' for stdin). Overrides config file.
+- `-to <destination>`: Output destination (file path or '-' for stdout). Overrides config file.
 - `-version`: Print version and exit
 
 ### Configuration
@@ -33,8 +35,8 @@ feedfilter uses a JSON configuration file to specify the feed source, output des
 
 #### Configuration Fields
 
-- `from` (required): URL of the RSS/Atom feed to filter
-- `to` (required): File path where the filtered feed will be written
+- `from`: URL, file path, or '-' for stdin. Required unless `-from` flag is used.
+- `to`: File path or '-' for stdout. Required unless `-to` flag is used.
 - `to_fmt` (required): Output format - `"rss"`, `"atom"`, or `"json"`
 - `include_if` (optional): CEL expression to determine which items to include. If empty, all items are included.
 - `meta` (optional): Metadata for the output feed
@@ -101,6 +103,8 @@ Run them via, for example:
 ```shell
 docker run -v ./config.json:/config.json --rm cdzombak/feedfilter:1 -config /config.json
 docker run -v ./config.json:/config.json --rm ghcr.io/cdzombak/feedfilter:1 -config /config.json
+# Or use flags to override config:
+echo '<rss>...</rss>' | docker run -i --rm cdzombak/feedfilter:1 -from - -to - -config /config.json
 ```
 
 ## License
