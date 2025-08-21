@@ -67,7 +67,7 @@ func main() {
 		os.Exit(ec.NotConfigured)
 	}
 	if cfg.To == "" {
-		log.Println("Config error: 'to' must be a valid file path")
+		log.Println("Config error: 'to' must be a valid file path or '-' for stdout")
 		os.Exit(ec.NotConfigured)
 	}
 	if cfg.ToFmt != FmtJson && cfg.ToFmt != FmtRss && cfg.ToFmt != FmtAtom {
@@ -198,31 +198,49 @@ func main() {
 		outFeed.Add(outItem)
 	}
 
-	outFile, err := os.OpenFile(cfg.To, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, OutMode)
-	if err != nil {
-		log.Printf("Error opening output file '%s': %s", cfg.To, err)
-		os.Exit(ec.IOErr)
-	}
-	defer func(outFile *os.File) {
-		if err := outFile.Close(); err != nil {
-			log.Printf("Error closing output file: %s", err)
+	var outFile *os.File
+	if cfg.To == "-" {
+		outFile = os.Stdout
+	} else {
+		var err error
+		outFile, err = os.OpenFile(cfg.To, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, OutMode)
+		if err != nil {
+			log.Printf("Error opening output file '%s': %s", cfg.To, err)
 			os.Exit(ec.IOErr)
 		}
-	}(outFile)
+		defer func(outFile *os.File) {
+			if err := outFile.Close(); err != nil {
+				log.Printf("Error closing output file: %s", err)
+				os.Exit(ec.IOErr)
+			}
+		}(outFile)
+	}
 	switch cfg.ToFmt {
 	case FmtJson:
 		if err := outFeed.WriteJSON(outFile); err != nil {
-			log.Printf("Error writing JSON feed '%s': %s", cfg.To, err)
+			if cfg.To == "-" {
+				log.Printf("Error writing JSON feed to stdout: %s", err)
+			} else {
+				log.Printf("Error writing JSON feed '%s': %s", cfg.To, err)
+			}
 			os.Exit(ec.Failure)
 		}
 	case FmtRss:
 		if err := outFeed.WriteRss(outFile); err != nil {
-			log.Printf("Error writing RSS feed '%s': %s", cfg.To, err)
+			if cfg.To == "-" {
+				log.Printf("Error writing RSS feed to stdout: %s", err)
+			} else {
+				log.Printf("Error writing RSS feed '%s': %s", cfg.To, err)
+			}
 			os.Exit(ec.Failure)
 		}
 	case FmtAtom:
 		if err := outFeed.WriteAtom(outFile); err != nil {
-			log.Printf("Error writing Atom feed '%s': %s", cfg.To, err)
+			if cfg.To == "-" {
+				log.Printf("Error writing Atom feed to stdout: %s", err)
+			} else {
+				log.Printf("Error writing Atom feed '%s': %s", cfg.To, err)
+			}
 			os.Exit(ec.Failure)
 		}
 	default:

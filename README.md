@@ -31,10 +31,21 @@ feedfilter uses a JSON configuration file to specify the feed source, output des
 }
 ```
 
+To output to stdout instead of a file, set `"to": "-"`:
+
+```json
+{
+  "from": "https://example.com/feed.xml",
+  "to": "-",
+  "to_fmt": "json",
+  "include_if": "title.contains('keyword')"
+}
+```
+
 #### Configuration Fields
 
 - `from` (required): URL of the RSS/Atom feed to filter
-- `to` (required): File path where the filtered feed will be written
+- `to` (required): File path where the filtered feed will be written, or `"-"` to output to stdout
 - `to_fmt` (required): Output format - `"rss"`, `"atom"`, or `"json"`
 - `include_if` (optional): CEL expression to determine which items to include. If empty, all items are included.
 - `meta` (optional): Metadata for the output feed
