@@ -6,7 +6,7 @@ replace github.com/gopherlibs/feedhub => github.com/cdzombak/feedhub v0.0.0-2025
 
 require (
 	github.com/cdzombak/exitcode_go v0.0.1
-	github.com/google/cel-go v0.26.0
+	github.com/google/cel-go v0.26.1
 	github.com/gopherlibs/feedhub v1.1.0
 	github.com/mmcdole/gofeed v1.3.0
 )
