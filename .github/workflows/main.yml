@@ -180,7 +180,7 @@ jobs:
         run: |
           gem install --no-document fpm -v "$FPM_VERSION"
       - name: Build binaries & packages
-        run: make package
+        run: make package build-darwin-arm64 build-darwin-amd64
       - name: Prepare release artifacts
         working-directory: out/
         run: |
@@ -279,7 +279,7 @@ jobs:
 
   homebrew:
     name: Update Homebrew Tap
-    needs: [meta, binaries]
+    needs: [meta, binaries, release]
     if: needs.meta.outputs.is_release == 'true'
     runs-on: ubuntu-latest
     steps:
