@@ -293,8 +293,8 @@ jobs:
           github_token: ${{ secrets.HOMEBREW_RELEASER_PAT }}
           commit_owner: homebrew-releaser-bot
           commit_email: homebrew-releaser-bot@users.noreply.github.com
-          target_darwin_amd64: true
-          target_darwin_arm64: true
+          target_darwin_amd64: false
+          target_darwin_arm64: false
           target_linux_amd64: true
           target_linux_arm64: true
           version: v${{ needs.meta.outputs.bin_version }}
