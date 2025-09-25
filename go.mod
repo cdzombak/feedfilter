@@ -5,7 +5,7 @@ go 1.24
 replace github.com/gopherlibs/feedhub => github.com/cdzombak/feedhub v0.0.0-20250314140716-26cd5e809398
 
 require (
-	github.com/cdzombak/exitcode_go v0.0.1
+	github.com/cdzombak/exitcode_go v0.0.2
 	github.com/google/cel-go v0.26.1
 	github.com/gopherlibs/feedhub v1.1.0
 	github.com/mmcdole/gofeed v1.3.0
